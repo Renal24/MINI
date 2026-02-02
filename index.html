@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Logistics App</title>
+<title>Driver Routes</title>
+
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 
@@ -11,7 +12,7 @@
 :root{
 --bg-color:var(--tg-theme-bg-color,#fff);
 --text-color:var(--tg-theme-text-color,#000);
---hint-color:var(--tg-theme-hint-color,#999);
+--hint-color:var(--tg-theme-hint-color,#888);
 --button-color:var(--tg-theme-button-color,#2481cc);
 --button-text:var(--tg-theme-button-text-color,#fff);
 --secondary-bg:var(--tg-theme-secondary-bg-color,#f0f0f0);
@@ -37,40 +38,46 @@ gap:12px;
 }
 .route-card{
 background:var(--secondary-bg);
-padding:16px;
-border-radius:12px;
+padding:20px;
+border-radius:14px;
 text-align:center;
 cursor:pointer;
+font-size:16px;
 }
 .route-card:active{transform:scale(.96);}
 .badge{
+margin-top:6px;
+display:inline-block;
 background:var(--button-color);
 color:var(--button-text);
-padding:2px 8px;
-border-radius:10px;
+padding:4px 10px;
+border-radius:12px;
 font-size:12px;
 }
 .page{display:none;}
 .page.active{display:block;}
 .address-item{
 background:var(--secondary-bg);
-padding:12px;
-border-radius:10px;
-margin-bottom:8px;
+padding:18px;
+border-radius:12px;
+margin-bottom:10px;
 display:flex;
 justify-content:space-between;
+align-items:center;
+font-size:16px;
+cursor:pointer;
 }
 .btn{
 width:100%;
-margin-top:8px;
-padding:10px;
+padding:18px;
 border:none;
-border-radius:8px;
+border-radius:12px;
 background:var(--button-color);
 color:var(--button-text);
-font-weight:500;
+font-size:18px;
+font-weight:600;
+margin-top:12px;
 }
-.btn-danger{background:#ff4d4d;}
 .btn-light{
 background:var(--secondary-bg);
 color:var(--text-color);
@@ -82,156 +89,124 @@ color:var(--text-color);
 
 <!-- MAIN -->
 <div id="main-page" class="page active">
-<div class="header">
-<h1>Маршруты</h1>
-<span id="user-name" style="font-size:12px;opacity:.6"></span>
-</div>
-
-<button class="btn" onclick="addRoute()">➕ Добавить маршрут</button>
-<div class="route-grid" id="route-grid"></div>
+  <div class="header">
+    <h1>Маршруты</h1>
+    <span id="user-name" style="font-size:12px;opacity:.6"></span>
+  </div>
+  <div class="route-grid" id="route-grid"></div>
 </div>
 
 <!-- ROUTE -->
 <div id="route-page" class="page">
-<h2 id="route-title"></h2>
-<button class="btn" onclick="addAddress()">➕ Добавить адрес</button>
-<div id="address-list"></div>
-<button class="btn btn-light" onclick="showPage('main-page')">Назад</button>
+  <h2 id="route-title"></h2>
+  <div id="address-list"></div>
+  <button class="btn btn-light" onclick="showPage('main-page')">Назад</button>
 </div>
 
 <!-- DETAILS -->
 <div id="details-page" class="page">
-<h2 id="addr-name"></h2>
-<p id="addr-info" style="color:var(--hint-color)"></p>
+  <h2 id="addr-name"></h2>
+  <p id="addr-info" style="color:var(--hint-color)"></p>
 
-<div id="nav-button-container"></div>
-
-<button class="btn" onclick="editName()">✏️ Переименовать</button>
-<button class="btn" onclick="editCoords()">📍 Изменить координаты</button>
-<button class="btn" onclick="removeCoords()">❌ Удалить координаты</button>
-<button class="btn" onclick="changeRoute()">🔁 Сменить маршрут</button>
-<button class="btn btn-danger" onclick="deleteItem()">🗑 Удалить адрес</button>
-<button class="btn btn-light" onclick="showPage('route-page')">Назад</button>
+  <button class="btn" onclick="goNav()">🧭 Открыть навигатор</button>
+  <button class="btn btn-light" onclick="showPage('route-page')">Назад к маршруту</button>
 </div>
 
 <script>
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-let data = JSON.parse(localStorage.getItem('logistics_data')) || [];
-let currentRoute=null;
-let currentItem=null;
+/* ===== DATA ===== */
+let data = [
+  { id: 7701, route: 77, name: "Краснопутиловская 20", coords: "" },
+  { id: 7702, route: 77, name: "Краснопутиловская 12", coords: "" },
+  { id: 7703, route: 77, name: "Стачек 74/3", coords: "" },
+  { id: 7704, route: 77, name: "Стачек 55", coords: "" },
+  { id: 7705, route: 77, name: "Маршала Говорова 11/3", coords: "" },
+  { id: 7706, route: 77, name: "Маршала Говорова 17", coords: "" },
+  { id: 7707, route: 77, name: "Маршала Говорова 14", coords: "" },
+  { id: 7708, route: 77, name: "Автовская 33", coords: "" },
+  { id: 7709, route: 77, name: "Васи Алексеева 26", coords: "" },
+  { id: 7710, route: 77, name: "Трефолева 9к2", coords: "" },
+  { id: 7711, route: 77, name: "Севастопольская 29", coords: "" },
+  { id: 7712, route: 77, name: "Стачек 27", coords: "" },
+  { id: 7713, route: 77, name: "Стачек 41", coords: "" },
+  { id: 7714, route: 77, name: "Стачек 47", coords: "" },
+  { id: 7715, route: 77, name: "Стачек 57", coords: "" }
+];
 
-function save(){
-localStorage.setItem('logistics_data',JSON.stringify(data));
-}
+let currentRoute = null;
+let currentItem = null;
 
+/* ===== INIT ===== */
 function init(){
-document.getElementById('user-name').innerText=tg.initDataUnsafe?.user?.first_name||'Диспетчер';
-renderRoutes();
+  document.getElementById('user-name').innerText =
+    tg.initDataUnsafe?.user?.first_name || 'Водитель';
+  renderRoutes();
 }
 
+/* ===== ROUTES ===== */
 function renderRoutes(){
-const grid=document.getElementById('route-grid');
-grid.innerHTML='';
-[...new Set(data.map(d=>d.route))].forEach(r=>{
-const count=data.filter(d=>d.route===r).length;
-grid.innerHTML+=`
-<div class="route-card" onclick="openRoute(${r})">
-<div>${count?'🚚':'📦'}</div>
-<div>Маршрут ${r}</div>
-<span class="badge">${count} точ.</span>
-</div>`;
-});
-}
+  const grid = document.getElementById('route-grid');
+  grid.innerHTML = '';
 
-function addRoute(){
-const r=prompt('Номер маршрута');
-if(!r)return;
-data.push({id:Date.now(),route:+r,name:'Новый адрес',coords:''});
-save();
-renderRoutes();
+  const routes = [...new Set(data.map(d => d.route))];
+  routes.forEach(r => {
+    const count = data.filter(d => d.route === r).length;
+    grid.innerHTML += `
+      <div class="route-card" onclick="openRoute(${r})">
+        <div style="font-size:28px">🚚</div>
+        <div>Маршрут ${r}</div>
+        <span class="badge">${count} точек</span>
+      </div>
+    `;
+  });
 }
 
 function openRoute(r){
-currentRoute=r;
-document.getElementById('route-title').innerText='Маршрут №'+r;
-const list=document.getElementById('address-list');
-list.innerHTML='';
-data.filter(d=>d.route===r).forEach(i=>{
-list.innerHTML+=`
-<div class="address-item" onclick="openDetails(${i.id})">
-<span>${i.coords?'📍':'🏠'} ${i.name}</span><span>❯</span>
-</div>`;
-});
-showPage('route-page');
+  currentRoute = r;
+  document.getElementById('route-title').innerText = `Маршрут №${r}`;
+
+  const list = document.getElementById('address-list');
+  list.innerHTML = '';
+
+  data
+    .filter(d => d.route === r)
+    .forEach(i => {
+      list.innerHTML += `
+        <div class="address-item" onclick="openDetails(${i.id})">
+          <span>${i.coords ? '📍' : '🏠'} ${i.name}</span>
+          <span>❯</span>
+        </div>
+      `;
+    });
+
+  showPage('route-page');
 }
 
-function addAddress(){
-const name=prompt('Название адреса');
-if(!name)return;
-data.push({id:Date.now(),route:currentRoute,name,coords:''});
-save();
-openRoute(currentRoute);
-}
-
+/* ===== DETAILS ===== */
 function openDetails(id){
-currentItem=data.find(d=>d.id===id);
-document.getElementById('addr-name').innerText=currentItem.name;
-document.getElementById('addr-info').innerText=currentItem.coords||'Координаты не заданы';
+  currentItem = data.find(d => d.id === id);
+  document.getElementById('addr-name').innerText = currentItem.name;
+  document.getElementById('addr-info').innerText =
+    currentItem.coords ? 'Навигация по координатам' : 'Навигация по адресу';
 
-const nav=document.getElementById('nav-button-container');
-nav.innerHTML='';
-if(currentItem.coords){
-const [lat,lon]=currentItem.coords.split(',');
-nav.innerHTML=`<button class="btn" onclick="window.open('https://yandex.ru/maps/?rtext=~${lat},${lon}')">Навигатор</button>`;
-}
-showPage('details-page');
+  showPage('details-page');
 }
 
-function editName(){
-const n=prompt('Новое название',currentItem.name);
-if(!n)return;
-currentItem.name=n;
-save();
-openDetails(currentItem.id);
+function goNav(){
+  if(currentItem.coords){
+    const [lat, lon] = currentItem.coords.split(',');
+    window.open(`https://yandex.ru/maps/?rtext=~${lat},${lon}`);
+  } else {
+    window.open(`https://yandex.ru/maps/?text=${encodeURIComponent(currentItem.name)}`);
+  }
 }
 
-function editCoords(){
-const c=prompt('lat,lon',currentItem.coords);
-if(!c)return;
-currentItem.coords=c;
-save();
-openDetails(currentItem.id);
-}
-
-function removeCoords(){
-currentItem.coords='';
-save();
-openDetails(currentItem.id);
-}
-
-function changeRoute(){
-const r=prompt('Новый маршрут');
-if(!r)return;
-currentItem.route=+r;
-save();
-showPage('main-page');
-renderRoutes();
-}
-
-function deleteItem(){
-tg.showConfirm('Удалить адрес?',ok=>{
-if(!ok)return;
-data=data.filter(d=>d.id!==currentItem.id);
-save();
-openRoute(currentRoute);
-});
-}
-
+/* ===== NAV ===== */
 function showPage(id){
-document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
 }
 
 init();
