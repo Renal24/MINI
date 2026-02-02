@@ -1,224 +1,510 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Driver Routes</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ЛК-СМАРТ | Водитель AI</title>
 
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-<style>
-:root{
---bg-color:var(--tg-theme-bg-color,#fff);
---text-color:var(--tg-theme-text-color,#000);
---hint-color:var(--tg-theme-hint-color,#888);
---button-color:var(--tg-theme-button-color,#2481cc);
---button-text:var(--tg-theme-button-text-color,#fff);
---secondary-bg:var(--tg-theme-secondary-bg-color,#f0f0f0);
-}
-body{
-font-family:Roboto,sans-serif;
-background:var(--bg-color);
-color:var(--text-color);
-margin:0;
-padding:16px;
-user-select:none;
-}
-.header{
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-bottom:16px;
-}
-.route-grid{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:12px;
-}
-.route-card{
-background:var(--secondary-bg);
-padding:20px;
-border-radius:14px;
-text-align:center;
-cursor:pointer;
-}
-.route-card:active{transform:scale(.96);}
-.badge{
-margin-top:6px;
-display:inline-block;
-background:var(--button-color);
-color:var(--button-text);
-padding:4px 10px;
-border-radius:12px;
-font-size:12px;
-}
-.page{display:none;}
-.page.active{display:block;}
-.address-item{
-background:var(--secondary-bg);
-padding:18px;
-border-radius:12px;
-margin-bottom:10px;
-display:flex;
-justify-content:space-between;
-align-items:center;
-font-size:16px;
-cursor:pointer;
-}
-.btn{
-width:100%;
-padding:18px;
-border:none;
-border-radius:12px;
-background:var(--button-color);
-color:var(--button-text);
-font-size:18px;
-font-weight:600;
-margin-top:12px;
-}
-.btn-light{
-background:var(--secondary-bg);
-color:var(--text-color);
-}
-</style>
+    <style>
+        :root {
+            --bg-color: #f8f9fb;
+            --card-bg: #ffffff;
+            --text-main: #202124;
+            --text-secondary: #70757a;
+            --accent-color: #8e44ad;
+            --accent-light: #f4ecf7;
+            --price-green: #2ecc71;
+            --border-color: #f0f0f0;
+            --ai-color: #4285f4;
+            --ai-light: #e8f0fe;
+            --nav-blue: #007aff;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .container {
+            padding: 16px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .app-header {
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            background: white;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+            .app-header .title {
+                flex-grow: 1;
+                text-align: center;
+                font-weight: 600;
+                font-size: 16px;
+            }
+
+        /* Route Cards */
+        .route-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            position: relative;
+        }
+
+        .route-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .route-number {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .route-stats {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+
+        .price-badge {
+            background: #e8f9ef;
+            color: var(--price-green);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .section-label {
+            font-size: 15px;
+            font-weight: 700;
+            margin: 12px 0 4px 0;
+        }
+
+        .address-text {
+            font-size: 14px;
+            color: var(--text-main);
+            line-height: 1.4;
+        }
+
+        .sub-info {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        /* Action Buttons */
+        .btn-main {
+            background: var(--accent-color);
+            color: white;
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 18px;
+            font-size: 16px;
+            font-weight: 700;
+            margin-top: 10px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+            .btn-main:active {
+                opacity: 0.8;
+            }
+
+        .btn-ai {
+            background: var(--ai-light);
+            color: var(--ai-color);
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--nav-blue);
+            color: var(--nav-blue);
+            padding: 12px;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 600;
+            width: 100%;
+            margin-bottom: 12px;
+        }
+
+        /* Basket View */
+        .basket-item {
+            display: flex;
+            gap: 12px;
+            padding: 16px 12px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            border-radius: 12px;
+            transition: background 0.2s;
+            margin: 0 -12px;
+        }
+
+            .basket-item:active {
+                background-color: var(--accent-light);
+            }
+
+        .step-number {
+            width: 24px;
+            height: 24px;
+            background: var(--accent-light);
+            color: var(--accent-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .nav-icon {
+            color: var(--accent-color);
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+        }
+
+        /* AI Suggestion Box */
+        .ai-box {
+            background: var(--ai-light);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 12px;
+            font-size: 14px;
+            color: var(--ai-color);
+            line-height: 1.5;
+            display: none;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid currentColor;
+            border-right-color: transparent;
+            border-radius: 50%;
+            animation: rotate 0.8s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes rotate {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Pages */
+        .page {
+            display: none;
+        }
+
+            .page.active {
+                display: block;
+            }
+
+        .footer-action {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 16px;
+            border-top: 1px solid var(--border-color);
+            z-index: 1000;
+        }
+
+        .pb-large {
+            padding-bottom: 140px;
+        }
+    </style>
 </head>
-
 <body>
 
-<!-- MAIN -->
-<div id="main-page" class="page active">
-  <div class="header">
-    <h1>Маршруты</h1>
-    <span id="user-name" style="font-size:12px;opacity:.6"></span>
-  </div>
-  <div class="route-grid" id="route-grid"></div>
-</div>
+    <div class="app-header">
+        <div id="back-btn" style="cursor: pointer; font-size: 20px; display: none;" onclick="handleBack()">‹</div>
+        <div class="title" id="page-title">Готовые маршруты</div>
+        <div style="width: 20px;"></div>
+    </div>
 
-<!-- ROUTE -->
-<div id="route-page" class="page">
-  <h2 id="route-title"></h2>
-  <div id="address-list"></div>
-  <button class="btn btn-light" onclick="showPage('main-page')">Назад</button>
-</div>
+    <!-- MAIN PAGE -->
+    <div id="main-page" class="page active">
+        <div class="container">
+            <div id="routes-container"></div>
+        </div>
+    </div>
 
-<!-- DETAILS -->
-<div id="details-page" class="page">
-  <h2 id="addr-name"></h2>
-  <p id="addr-info" style="color:var(--hint-color)"></p>
+    <!-- BASKET PAGE -->
+    <div id="basket-page" class="page">
+        <div class="container pb-large">
+            <div class="route-card">
+                <button class="btn-main btn-ai" id="ai-opt-btn" onclick="optimizeWithAI()">
+                    ✨ Оптимизировать порядок AI
+                </button>
 
-  <button class="btn" onclick="goNav()">🧭 Открыть навигатор</button>
-  <button class="btn btn-light" onclick="showPage('route-page')">Назад</button>
-</div>
+                <button class="btn-outline" onclick="buildFullRoute()">
+                    🗺 Построить маршрут целиком
+                </button>
 
-<script>
-const tg = window.Telegram.WebApp;
-tg.expand();
+                <div class="section-label">Погрузка</div>
+                <div class="address-text" onclick="openMap('Санкт-Петербург, посёлок Шушары, Московское шоссе, 143')" style="cursor:pointer; color: var(--ai-color);">
+                    📍 Шушары, Московское шоссе, 143
+                </div>
 
-/* ===== DATA ===== */
-let data = [
-  /* ===== ROUTE 77 ===== */
-  { id: 7701, route: 77, name: "Краснопутиловская 20", coords: "" },
-  { id: 7702, route: 77, name: "Краснопутиловская 12", coords: "" },
-  { id: 7703, route: 77, name: "Стачек 74/3", coords: "" },
-  { id: 7704, route: 77, name: "Стачек 55", coords: "" },
-  { id: 7705, route: 77, name: "Маршала Говорова 11/3", coords: "" },
-  { id: 7706, route: 77, name: "Маршала Говорова 17", coords: "" },
-  { id: 7707, route: 77, name: "Маршала Говорова 14", coords: "" },
-  { id: 7708, route: 77, name: "Автовская 33", coords: "" },
-  { id: 7709, route: 77, name: "Васи Алексеева 26", coords: "" },
-  { id: 7710, route: 77, name: "Трефолева 9к2", coords: "" },
-  { id: 7711, route: 77, name: "Севастопольская 29", coords: "" },
-  { id: 7712, route: 77, name: "Стачек 27", coords: "" },
-  { id: 7713, route: 77, name: "Стачек 41", coords: "" },
-  { id: 7714, route: 77, name: "Стачек 47", coords: "" },
-  { id: 7715, route: 77, name: "Стачек 57", coords: "" },
+                <div class="section-label" id="points-count-label">Разгрузка</div>
+                <div id="basket-list"></div>
 
-  /* ===== ROUTE 78 ===== */
-  { id: 7801, route: 78, name: "Лебяжье д.6", coords: "" },
-  { id: 7802, route: 78, name: "Набережная улица 24б", coords: "" },
-  { id: 7803, route: 78, name: "Пионерская д.4", coords: "" },
-  { id: 7804, route: 78, name: "Копорское шоссе д.32", coords: "" },
-  { id: 7805, route: 78, name: "Комсомольская улица 18а", coords: "" },
-  { id: 7806, route: 78, name: "Комсомольская 23", coords: "" },
-  { id: 7807, route: 78, name: "Ленинградская 10", coords: "" },
-  { id: 7808, route: 78, name: "50 лет Октября д.6", coords: "" },
-  { id: 7809, route: 78, name: "Ленинградская 60", coords: "" },
-  { id: 7810, route: 78, name: "Ленинградская 70", coords: "" },
-  { id: 7811, route: 78, name: "Героев 74", coords: "" },
-  { id: 7812, route: 78, name: "Героев 35", coords: "" },
-  { id: 7813, route: 78, name: "Липовский 3А", coords: "" },
-  { id: 7814, route: 78, name: "Липовский 25", coords: "" },
-  { id: 7815, route: 78, name: "Парковая 22", coords: "" },
-  { id: 7816, route: 78, name: "Парковая 23", coords: "" },
-  { id: 7817, route: 78, name: "Академика Александрова 2", coords: "" }
-];
+                <div id="ai-summary" class="ai-box"></div>
+            </div>
+        </div>
+        <div class="footer-action">
+            <button class="btn-main" onclick="takeToWork()">
+                Взять в работу
+                <div style="font-size: 12px; font-weight: 400; margin-top: 2px;" id="route-summary-footer"></div>
+            </button>
+        </div>
+    </div>
 
-let currentRoute=null;
-let currentItem=null;
+    <script>
+        const apiKey = "AIzaSyCS4jxNh0dFe9InNgUxt_Xz2Ka6yZM2q4U";
+        const tg = window.Telegram.WebApp;
+        tg.expand();
 
-/* ===== INIT ===== */
-function init(){
-  document.getElementById('user-name').innerText =
-    tg.initDataUnsafe?.user?.first_name || 'Водитель';
-  renderRoutes();
-}
+        const routesData = [
+            {
+                id: 9782,
+                distance: "444 км",
+                time: "16 ч 25 м",
+                price: "12,400.00 ₽",
+                loading: "Санкт-Петербург, посёлок Шушары, Московское шоссе, 143",
+                loadingBoxes: 34,
+                points: [
+                    { name: "Выборг, Пограничная улица 4", boxes: 3 },
+                    { name: "Выборг, Вокзальная улица 4", boxes: 1 },
+                    { name: "г. Выборг, ул Ростовская улица д. 5", boxes: 2 },
+                    { name: "Выборг, улица Мира 4", boxes: 4 },
+                    { name: "Выборг, Проспект Ленина 18", boxes: 1 },
+                    { name: "Выборг, Проспект Суворова 7", boxes: 5 }
+                ]
+            },
+            {
+                id: 9785,
+                distance: "90 км",
+                time: "4 ч 1 м",
+                price: "3,800.00 ₽",
+                loading: "Санкт-Петербург, посёлок Шушары, Московское шоссе, 143",
+                loadingBoxes: 22,
+                points: [
+                    { name: "Гатчина, проспект 25 Октября, 10", boxes: 12 },
+                    { name: "Гатчина, ул. Соборная, 5", boxes: 10 }
+                ]
+            }
+        ];
 
-/* ===== ROUTES ===== */
-function renderRoutes(){
-  const grid=document.getElementById('route-grid');
-  grid.innerHTML='';
-  [...new Set(data.map(d=>d.route))].forEach(r=>{
-    const count=data.filter(d=>d.route===r).length;
-    grid.innerHTML+=`
-      <div class="route-card" onclick="openRoute(${r})">
-        <div style="font-size:28px">🚚</div>
-        <div>Маршрут ${r}</div>
-        <span class="badge">${count} точек</span>
-      </div>`;
-  });
-}
+        let currentRoute = null;
+        let history = ['main-page'];
 
-function openRoute(r){
-  currentRoute=r;
-  document.getElementById('route-title').innerText=`Маршрут №${r}`;
-  const list=document.getElementById('address-list');
-  list.innerHTML='';
-  data.filter(d=>d.route===r).forEach(i=>{
-    list.innerHTML+=`
-      <div class="address-item" onclick="openDetails(${i.id})">
-        <span>${i.coords?'📍':'🏠'} ${i.name}</span>
-        <span>❯</span>
-      </div>`;
-  });
-  showPage('route-page');
-}
+        // --- NAVIGATION HELPERS ---
+        function openMap(address) {
+            tg.HapticFeedback.impactOccurred('light');
+            const url = `https://yandex.ru/maps/?text=${encodeURIComponent(address)}`;
+            tg.openLink(url);
+        }
 
-/* ===== DETAILS ===== */
-function openDetails(id){
-  currentItem=data.find(d=>d.id===id);
-  document.getElementById('addr-name').innerText=currentItem.name;
-  document.getElementById('addr-info').innerText=
-    currentItem.coords?'Навигация по координатам':'Навигация по адресу';
-  showPage('details-page');
-}
+        // Построение мульти-маршрута в Яндекс Картах
+        function buildFullRoute() {
+            if (!currentRoute) return;
+            tg.HapticFeedback.impactOccurred('medium');
 
-function goNav(){
-  if(currentItem.coords){
-    const [lat,lon]=currentItem.coords.split(',');
-    window.open(`https://yandex.ru/maps/?rtext=~${lat},${lon}`);
-  }else{
-    window.open(`https://yandex.ru/maps/?text=${encodeURIComponent(currentItem.name)}`);
-  }
-}
+            // Собираем все точки: первая - склад, далее все ПВЗ
+            const allAddresses = [currentRoute.loading, ...currentRoute.points.map(p => p.name)];
 
-function showPage(id){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-}
+            // Формируем URL для Яндекс Карт (режим построения маршрута)
+            // Формат: https://yandex.ru/maps/?mode=routes&rtext=A~B~C
+            const routeString = allAddresses.map(addr => encodeURIComponent(addr)).join('~');
+            const url = `https://yandex.ru/maps/?mode=routes&rtext=${routeString}`;
 
-init();
-</script>
+            tg.openLink(url);
+        }
 
+        // --- GEMINI API HELPERS ---
+        async function callGemini(prompt, isJson = false) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                systemInstruction: { parts: [{ text: "You are a professional logistics assistant. Analyze addresses and return optimized sequence." }] }
+            };
+
+            if (isJson) {
+                payload.generationConfig = {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            optimizedIndices: { type: "ARRAY", items: { type: "NUMBER" } },
+                            aiAdvice: { type: "STRING" }
+                        }
+                    }
+                };
+            }
+
+            for (let i = 0; i < 5; i++) {
+                try {
+                    const response = await fetch(url, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload)
+                    });
+                    if (!response.ok) throw new Error("API call failed");
+                    const result = await response.json();
+                    return result.candidates?.[0]?.content?.parts?.[0]?.text;
+                } catch (e) {
+                    await new Promise(r => setTimeout(r, Math.pow(2, i) * 1000));
+                }
+            }
+            throw new Error("Failed after retries");
+        }
+
+        async function optimizeWithAI() {
+            const btn = document.getElementById('ai-opt-btn');
+            const summaryBox = document.getElementById('ai-summary');
+            const originalText = btn.innerText;
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span> ✨ Анализирую карту...';
+            summaryBox.style.display = 'none';
+
+            const prompt = `
+                    Оптимизируй порядок точек доставки для курьера.
+                    Начальная точка (склад): ${currentRoute.loading}.
+                    Точки разгрузки: ${currentRoute.points.map((p, i) => `${i}: ${p.name}`).join('; ')}.
+                    Верни новый порядок индексов для самого короткого пути.
+                `;
+
+            try {
+                const responseText = await callGemini(prompt, true);
+                const data = JSON.parse(responseText);
+                const newPoints = data.optimizedIndices.map(idx => currentRoute.points[idx]);
+                currentRoute.points = newPoints;
+                renderBasketList();
+                summaryBox.innerText = "✨ AI Помощник: Маршрут оптимизирован для экономии времени. " + (data.aiAdvice || "");
+                summaryBox.style.display = 'block';
+                tg.HapticFeedback.notificationOccurred('success');
+            } catch (err) {
+                tg.showAlert("Ошибка AI оптимизации.");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = originalText;
+            }
+        }
+
+        // --- CORE APP LOGIC ---
+        function init() {
+            renderRoutes();
+            tg.BackButton.onClick(handleBack);
+        }
+
+        function renderRoutes() {
+            const container = document.getElementById('routes-container');
+            container.innerHTML = '';
+            routesData.forEach(route => {
+                const card = document.createElement('div');
+                card.className = 'route-card';
+                card.innerHTML = `
+                        <div class="route-header">
+                            <div class="route-number">Маршрут ${route.id}</div>
+                            <div class="price-badge">${route.price}</div>
+                        </div>
+                        <div class="route-stats">${route.distance} • ${route.time}</div>
+                        <div class="section-label">Погрузка</div>
+                        <div class="address-text">${route.loading}</div>
+                        <div class="section-label">Разгрузка</div>
+                        <div class="address-text">${route.points[0].name} ... (+${route.points.length - 1})</div>
+                        <button class="btn-main" style="background: var(--accent-light); color: var(--accent-color); margin-top: 15px;" onclick="openBasket(${route.id})">
+                            Детали маршрута
+                        </button>
+                    `;
+                container.appendChild(card);
+            });
+        }
+
+        function openBasket(routeId) {
+            currentRoute = JSON.parse(JSON.stringify(routesData.find(r => r.id === routeId)));
+            document.getElementById('page-title').innerText = 'Маршрут №' + routeId;
+            document.getElementById('route-summary-footer').innerText = `${currentRoute.time}; ${currentRoute.distance}; ${currentRoute.price}`;
+            document.getElementById('ai-summary').style.display = 'none';
+            renderBasketList();
+            showPage('basket-page');
+        }
+
+        function renderBasketList() {
+            document.getElementById('points-count-label').innerText = `Разгрузка (${currentRoute.points.length} ПВЗ)`;
+            const list = document.getElementById('basket-list');
+            list.innerHTML = '';
+            currentRoute.points.forEach((p, index) => {
+                const item = document.createElement('div');
+                item.className = 'basket-item';
+                item.onclick = () => openMap(p.name);
+                item.innerHTML = `
+                        <div class="step-number">${index + 1}</div>
+                        <div style="flex-grow: 1">
+                            <div class="address-text">${p.name}</div>
+                            <div class="sub-info">${p.boxes} шт</div>
+                        </div>
+                        <div class="nav-icon">🧭</div>
+                    `;
+                list.appendChild(item);
+            });
+        }
+
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            if (pageId === 'main-page') {
+                tg.BackButton.hide();
+                history = ['main-page'];
+            } else {
+                tg.BackButton.show();
+                history.push(pageId);
+            }
+            window.scrollTo(0, 0);
+        }
+
+        function handleBack() { showPage('main-page'); }
+
+        function takeToWork() {
+            tg.showConfirm(`Взять маршрут №${currentRoute.id} в работу?`, (ok) => {
+                if (ok) {
+                    tg.HapticFeedback.impactOccurred('medium');
+                    tg.showAlert("Маршрут принят! Хорошей дороги.");
+                    showPage('main-page');
+                }
+            });
+        }
+
+        init();
+    </script>
 </body>
 </html>
