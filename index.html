@@ -129,16 +129,16 @@
             font-size: 13px;
             color: var(--text-secondary);
             margin-bottom: 10px;
-            font-weight: 500;
+            font-weight: 600;
         }
-        .pb-large { padding-bottom: 140px; }
+        .pb-large { padding-bottom: 150px; }
     </style>
 </head>
 <body>
 
     <div id="main-page" class="page active">
         <div class="app-header">
-            <div class="title">Доступные маршруты</div>
+            <div class="title">Готовые маршруты</div>
         </div>
         <div class="container" id="routes-list"></div>
     </div>
@@ -149,15 +149,15 @@
         </div>
         <div class="container pb-large">
             <div class="route-card">
-                <div class="section-label">Точка погрузки</div>
-                <div class="address-text" id="loading-addr" style="color: var(--nav-blue);">📍 Загрузка...</div>
+                <div class="section-label">Погрузка (Склад)</div>
+                <div class="address-text" id="loading-addr" style="color: var(--nav-blue);">📍 Шушары, Московское шоссе, 143</div>
                 
-                <div class="section-label" id="points-count">Точки разгрузки</div>
+                <div class="section-label" id="points-count">Разгрузка (0 точек)</div>
                 <div id="points-list"></div>
             </div>
         </div>
         <div class="footer-action">
-            <div class="route-summary-text" id="footer-stats">Маршрут: 0 км • 0 ч</div>
+            <div class="route-summary-text" id="footer-stats">Весь маршрут: -- км • -- ч</div>
             <button class="btn-main" onclick="buildFullRoute()">Построить маршрут целиком</button>
         </div>
     </div>
@@ -175,9 +175,16 @@
                 time: "16 ч 25 м",
                 loading: "Санкт-Петербург, посёлок Шушары, Московское шоссе, 143",
                 points: [
-                    { addr: "Выборг, Пограничная улица 4", boxes: 3 },
-                    { addr: "Выборг, Вокзальная улица 4", boxes: 1 },
-                    { addr: "Выборг, Проспект Ленина 18", boxes: 5 }
+                    { addr: "Выборг, Пограничная улица 4", id: "50007868" },
+                    { addr: "Выборг, Вокзальная улица 4", id: "50150055" },
+                    { addr: "г. Выборг, ул Ростовская улица д. 5", id: "1727" },
+                    { addr: "Выборг, улица Мира 4", id: "147112" },
+                    { addr: "Выборг, Проспект Ленина 18", id: "50043124" },
+                    { addr: "Выборг, ул Крепостная, д. 30", id: "50066503" },
+                    { addr: "Выборг, Проспект Суворова 7", id: "50034846" },
+                    { addr: "г. Выборг, Выборгская улица 40", id: "107213" },
+                    { addr: "г. Выборг, Выборгская Улица 6", id: "157142" },
+                    { addr: "Выборг, улица Северный Вал 2", id: "50138637" }
                 ]
             },
             {
@@ -188,8 +195,8 @@
                 time: "4 ч 1 м",
                 loading: "Санкт-Петербург, посёлок Шушары, Московское шоссе, 143",
                 points: [
-                    { addr: "Гатчина, проспект 25 Октября, 10", boxes: 12 },
-                    { addr: "Гатчина, ул. Соборная, 5", boxes: 10 }
+                    { addr: "Гатчина, проспект 25 Октября, 10", id: "10293" },
+                    { addr: "Гатчина, ул. Соборная, 5", id: "11044" }
                 ]
             }
         ];
@@ -204,7 +211,7 @@
                 div.className = 'route-card';
                 div.innerHTML = `
                     <div class="route-header">
-                        <div class="route-number">№${route.id}</div>
+                        <div class="route-number">Маршрут №${route.id}</div>
                         <div class="barcode-badge ${route.barcodeClass}">${route.barcode}</div>
                     </div>
                     <div class="route-stats">${route.dist} • ${route.time}</div>
@@ -219,7 +226,7 @@
         function openDetails(id) {
             selectedRoute = routesData.find(r => r.id === id);
             document.getElementById('details-title').innerText = 'Маршрут №' + id;
-            document.getElementById('loading-addr').innerText = '📍 ' + selectedRoute.loading;
+            document.getElementById('points-count').innerText = `Разгрузка (${selectedRoute.points.length} точек)`;
             document.getElementById('footer-stats').innerText = `Весь маршрут: ${selectedRoute.dist} • ${selectedRoute.time}`;
             
             const list = document.getElementById('points-list');
@@ -232,7 +239,7 @@
                     <div class="step-number">${i + 1}</div>
                     <div style="flex-grow: 1">
                         <div class="address-text">${p.addr}</div>
-                        <div style="font-size: 13px; color: var(--text-secondary);">${p.boxes} шт.</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">ID ${p.id}</div>
                     </div>
                     <div style="color: var(--text-secondary); font-size: 18px;">📍</div>
                 `;
@@ -250,16 +257,23 @@
         function buildFullRoute() {
             if (!selectedRoute) return;
             tg.HapticFeedback.impactOccurred('medium');
+            // Собираем склад + все точки разгрузки
             const allAddrs = [selectedRoute.loading, ...selectedRoute.points.map(p => p.addr)];
             const routeString = allAddrs.map(a => encodeURIComponent(a)).join('~');
+            // Режим построения маршрута в Яндексе
             tg.openLink(`https://yandex.ru/maps/?mode=routes&rtext=${routeString}`);
         }
 
         function showPage(pageId) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById(pageId).classList.add('active');
-            tg.BackButton.show();
-            if (pageId === 'main-page') tg.BackButton.hide();
+            
+            if (pageId === 'main-page') {
+                tg.BackButton.hide();
+            } else {
+                tg.BackButton.show();
+            }
+            window.scrollTo(0, 0);
         }
 
         tg.BackButton.onClick(() => showPage('main-page'));
